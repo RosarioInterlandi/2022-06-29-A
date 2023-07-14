@@ -5,7 +5,10 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.itunes.model.AdiacenzeBilanciate;
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Model;
 import javafx.event.ActionEvent;
@@ -35,10 +38,10 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA2"
-    private ComboBox<?> cmbA2; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
@@ -51,16 +54,58 @@ public class FXMLController {
 
     @FXML
     void doCalcolaAdiacenze(ActionEvent event) {
+    	if (cmbA1.getValue()== null) {
+    		txtResult.setText("Scegli il nodo");
+    		return;
+    	}
+    	List<AdiacenzeBilanciate> listaAdiacenti= this.model.calcolaAdiacenze(this.cmbA1.getValue());
+    	for (AdiacenzeBilanciate ab: listaAdiacenti) {
+    		txtResult.appendText(ab.getA().getTitle()+"bilancio"+ab.getBilancio()+"\n");
+    	}
     	
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
-    	
+    	int pesoMinimo = 0;
+    	try {
+    		pesoMinimo = Integer.parseInt(txtX.getText());
+    	}catch(NumberFormatException n) {
+    		txtResult.setText("Inserisci un valore minimo");
+    		return;
+    	}
+    	Album target = this.cmbA2.getValue();
+    	if (target == null) {
+    		txtResult.setText("Inserisci il target");
+    		return;
+    	}
+    	List<Album> result =this.model.getPath(pesoMinimo, target);
+    	if(result.size()==0) {
+    		txtResult.setText("Non esiste cammino che unisce i due vertici");
+    		return;
+    	}
+    	//Se sono qui tutti i valori sono validi
+    	txtResult.clear();
+    	txtResult.setText("Il cammino migliore è :\n");
+    	for (Album a: result) {
+    		txtResult.appendText(a.getTitle()+"\n");
+    	}
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	String n = this.txtN.getText();
+    	if (n!= null) {
+    		this.model.BuildGraph(Integer.parseInt(this.txtN.getText()));
+    		
+    		this.cmbA1.getItems().clear();
+    		this.cmbA2.getItems().clear();
+    		
+        	this.cmbA1.getItems().addAll(this.model.getAllAlbum());
+        	this.cmbA2.getItems().addAll(this.model.getAllAlbum());
+    	}else {
+    		txtResult.setText("Inserire il numero di traccie minimo");
+    	}
     	
     }
 
@@ -80,5 +125,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+
     }
 }

@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Artist;
 import it.polito.tdp.itunes.model.Genre;
@@ -137,6 +139,35 @@ public class ItunesDAO {
 			throw new RuntimeException("SQL Error");
 		}
 		return result;
+	}
+	
+	public List<Album> getVertici (Integer n, Map<Integer,Album> map){
+		String sql = "SELECT t.AlbumId,  COUNT(*) AS nTracks "
+				+ "FROM track t "
+				+ "GROUP BY t.AlbumId "
+				+ "HAVING  COUNT(t.TrackId)> ? ";
+		List<Album> result = new ArrayList<>();
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, n);
+			ResultSet rs = st.executeQuery();
+			
+			while (rs.next()) {
+				Album a = map.get(rs.getInt("AlbumId"));
+				a.setnTrack(rs.getInt("nTracks"));
+				result.add(a);
+			}
+			conn.close();
+			return result;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Errore di connesione al database");
+		}
+		
+		
+		
 	}
 	
 }
